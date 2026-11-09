@@ -1,0 +1,16 @@
+venv/
+__pycache__/
+*.pyc
+
+# Generated outputs
+output/
+
+# Model weights - upload separately to Google Drive
+*.safetensors
+*.onnx
+*.pt
+*.pth
+
+# Environment files
+.env
+.DS_Store
