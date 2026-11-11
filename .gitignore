@@ -12,3 +12,18 @@ __pycache__/
 # Environment files
 .env
 .DS_Store
+
+# Unnecessary intermediate outputs
+output/cleaned/
+output/punctuated/
+output/ordered/
+output/nsp_ordered/
+output/hybrid_ordered_backup/
+output/translated/
+output/clustered/
+output/location_groups/
+output/null_checked/
+output/topic_ordered/
+output/topic_grouped/
+output/topic_clusters/
+output/topic_groups/

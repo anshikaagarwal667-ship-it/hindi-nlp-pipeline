@@ -15,7 +15,7 @@ OUTPUT_FOLDER = Path("output/hybrid_ordered")
 OUTPUT_FOLDER.mkdir(parents=True, exist_ok=True)
 
 BATCH_SIZE = 16
-BEAM_WIDTH = 30
+BEAM_WIDTH = 100
 
 print("Loading models...")
 
@@ -144,22 +144,38 @@ def build_combined_scores(sentences):
 
             # A sentence beginning with a connector
             # is more likely to follow another sentence.
+            connector_bonus = 0.08 if has_connector(sentences[j]) else 0.0
+
             combined[i, j] = (
                 0.50 * nsp
                 + 0.30 * semantic
                 + 0.20 * overlap
+                + connector_bonus
             )
 
     return combined
 
 
-def find_best_order(scores):
+def find_best_order(scores, sentences):
     n = len(scores)
 
-    beam = [
-        (0.0, [start], {start})
-        for start in range(n)
+    dependent_starts = [
+        "इसलिए", "अतः", "तब", "लेकिन",
+        "इसके बाद", "इसके अलावा", "फिर",
+        "हालांकि", "उक्त", "वे ", "उस "
     ]
+
+    beam = []
+
+    for start in range(n):
+        text = sentences[start].strip()
+
+        penalty = 0.15 if any(
+            text.startswith(word)
+            for word in dependent_starts
+        ) else 0.0
+
+        beam.append((-penalty, [start], {start}))
 
     for step in range(n - 1):
         candidates = []
@@ -168,26 +184,23 @@ def find_best_order(scores):
             current = path[-1]
 
             for nxt in range(n):
-                if nxt not in visited:
-                    new_score = total + scores[current, nxt]
+                if nxt in visited:
+                    continue
 
-                    candidates.append((
-                        new_score,
-                        path + [nxt],
-                        visited | {nxt}
-                    ))
+                new_score = total + scores[current, nxt]
 
-        candidates.sort(
-            key=lambda x: x[0],
-            reverse=True
-        )
+                candidates.append((
+                    new_score,
+                    path + [nxt],
+                    visited | {nxt}
+                ))
 
-        beam = candidates[:BEAM_WIDTH]
+        candidates.sort(key=lambda x: x[0], reverse=True)
+        beam = candidates[:100]
 
         print(f"Ordering: {step + 1}/{n - 1}")
 
     return beam[0][1]
-
 
 for file_path in sorted(INPUT_FOLDER.glob("*.txt")):
 
@@ -203,8 +216,7 @@ for file_path in sorted(INPUT_FOLDER.glob("*.txt")):
 
     scores = build_combined_scores(sentences)
 
-    order = find_best_order(scores)
-
+    order = find_best_order(scores, sentences)
     ordered_sentences = [
         sentences[i] for i in order
     ]
