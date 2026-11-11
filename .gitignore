@@ -1,11 +1,9 @@
 venv/
+trans_venv/
 __pycache__/
 *.pyc
 
-# Generated outputs
-output/
-
-# Model weights - upload separately to Google Drive
+# Model weights
 *.safetensors
 *.onnx
 *.pt
@@ -13,5 +11,4 @@ output/
 
 # Environment files
 .env
-.DS_Storetrans_venv/
-venv/
+.DS_Store
